@@ -47,7 +47,7 @@ nav button{font-size:11px;padding:9px 3px}
 <button data-view="visits">الزيارات</button>
 <button data-view="branches">الفروع والمحافظات</button>
 <button data-view="teams">فرق الزيارات</button>
-<button data-view="exceptions">الاستثناءات</button>
+<button data-view="exceptions">الاستثناءات</button><button data-view="assign">تكليف زيارة</button>
 </nav></aside>
 <main>
 <section id="dashboard" class="view active">
@@ -104,8 +104,68 @@ nav button{font-size:11px;padding:9px 3px}
 <tr><td>VIS-026</td><td>ظرف طارئ للفريق</td><td>2</td><td>تحديد بديل</td><td><span class="badge danger">تصعيد</span></td></tr>
 <tr><td>VIS-041</td><td>عضو غير متاح</td><td>0</td><td>توفير بديل</td><td><span class="badge warn">قيد المعالجة</span></td></tr>
 </table></div></section>
+
+<section id="assign" class="view">
+<h2>تكليف زيارة</h2>
+<p class="sub">اختيار المنشأة والتاريخ وتشكيل الفريق الفعلي، مع التحقق من التعارضات قبل الجدولة.</p>
+
+<div class="panel">
+<h3>بيانات الزيارة</h3>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+<label style="font-size:13px">المنشأة<br><select id="facility" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;margin-top:5px">
+<option>منشأة الأمل</option><option>منشأة النور</option><option>منشأة السلام</option></select></label>
+<label style="font-size:13px">المحافظة<br><select style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;margin-top:5px">
+<option>المنيا</option><option>المنوفية</option><option>السويس</option></select></label>
+<label style="font-size:13px">تاريخ الزيارة<br><input id="visitDate" type="date" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;margin-top:5px"></label>
+<label style="font-size:13px">نوع الزيارة<br><select style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;margin-top:5px">
+<option>إدارية</option><option>فنية وإكلينيكية</option></select></label>
+</div>
+</div>
+
+<div class="panel">
+<h3>تشكيل الفريق الفعلي للزيارة</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<label style="font-size:13px">رئيس الفريق<br><select id="leader" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;margin-top:5px">
+<option>أحمد محمد</option><option>محمد علي</option><option>محمود حسن</option></select></label>
+<div>
+<div style="font-size:13px;margin-bottom:6px">أعضاء الفريق</div>
+<label style="display:block;margin:7px 0;font-size:13px"><input type="checkbox" checked class="member" value="محمد علي"> محمد علي</label>
+<label style="display:block;margin:7px 0;font-size:13px"><input type="checkbox" class="member" value="محمود حسن"> محمود حسن</label>
+<label style="display:block;margin:7px 0;font-size:13px"><input type="checkbox" checked class="member" value="أحمد إبراهيم"> أحمد إبراهيم</label>
+</div>
+</div>
+</div>
+
+<div class="panel" id="availabilityPanel">
+<div class="row"><h3 style="margin:0">فحص التوافر والتعارضات</h3><span class="badge ok">جاهز للفحص</span></div>
+<p id="availabilityText" style="margin:10px 0;color:var(--muted);font-size:13px">اختر التاريخ والتشكيل، وسيتم عرض أي تعارض قبل الجدولة.</p>
+<div class="actions">
+<button class="btn" onclick="checkAvailability()">فحص التوافر</button>
+<button class="btn alt" onclick="simulateConflict()">عرض مثال تعارض</button>
+</div>
+<div id="availabilityResult" style="margin-top:12px"></div>
+</div>
+
+<div class="panel">
+<div class="row"><h3 style="margin:0">إجراء الجدولة</h3><span class="badge warn">يتطلب اجتياز فحص التوافر</span></div>
+<br><button class="btn" onclick="scheduleVisit()">جدولة الزيارة</button>
+</div>
+</section>
 </main></div>
 <script>
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.view).classList.add('active')});
+
+function checkAvailability(){
+ const result=document.getElementById('availabilityResult');
+ const members=[...document.querySelectorAll('.member:checked')].map(x=>x.value);
+ result.innerHTML='<div class="badge ok">لا توجد تعارضات مبدئية مع التشكيل المختار.</div><div style="margin-top:8px;font-size:12px;color:var(--muted)">رئيس الفريق: '+document.getElementById('leader').value+' — الأعضاء: '+members.join('، ')+'</div>';
+}
+function simulateConflict(){
+ document.getElementById('availabilityResult').innerHTML='<div class="badge danger">يوجد تعارض</div><div style="margin-top:8px;font-size:13px">محمد علي لديه زيارة أخرى في نفس التاريخ. يجب تغيير التاريخ أو استبدال العضو قبل الجدولة.</div>';
+}
+function scheduleVisit(){
+ const result=document.getElementById('availabilityResult');
+ result.innerHTML='<div class="badge ok">تم اجتياز الفحص مبدئيًا — الزيارة جاهزة للجدولة.</div><div style="margin-top:8px;font-size:13px">في النسخة التشغيلية سيتم حفظ التكليف وإظهاره فورًا في جدول الزيارات.</div>';
+}
 </script>
 </body></html>
