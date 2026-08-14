@@ -34,20 +34,46 @@ nav button{font-size:11px;padding:9px 3px}
 .grid{gap:8px}.card{padding:12px}.num{font-size:23px}
 .branch-grid{grid-template-columns:1fr}
 }
+
+.login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0b6e69,#087f7a);display:flex;align-items:center;justify-content:center;padding:20px;z-index:999}
+.login-card{width:min(420px,100%);background:#fff;border-radius:18px;padding:28px;box-shadow:0 18px 45px #0003;text-align:right}
+.login-logo{width:70px;height:70px;border:3px solid #c79a3b;border-radius:50%;display:grid;place-items:center;color:#0b6e69;font-weight:bold;margin:0 auto 15px}
+.login-card h2{text-align:center;margin:0 0 6px}.login-card p{text-align:center;color:#718086;font-size:13px;margin:0 0 22px}
+.login-card label{display:block;font-size:13px;margin:12px 0 5px}.login-card select{width:100%;padding:12px;border:1px solid #dfe8e8;border-radius:9px;background:#fff;font:inherit}
+.login-btn{width:100%;margin-top:18px;padding:12px;border:0;border-radius:9px;background:#0b6e69;color:#fff;font:inherit;font-weight:bold;cursor:pointer}
+.role-note{margin-top:12px!important;font-size:11px!important;color:#718086!important}
 </style>
 </head>
 <body>
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-logo">GAHAR</div>
+    <h2>نظام إدارة الزيارات</h2>
+    <p>تسجيل الدخول التجريبي حسب الصلاحية</p>
+    <label>المستخدم</label>
+    <select id="demoUser">
+      <option value="gm">مدير عام الإدارة</option>
+      <option value="manager">مدير الإدارة</option>
+      <option value="branch">مدير فرع المنيا</option>
+      <option value="leader">رئيس فريق — المقر الرئيسي</option>
+      <option value="member">عضو فريق — المقر الرئيسي</option>
+    </select>
+    <button class="login-btn" onclick="loginDemo()">دخول</button>
+    <p class="role-note">هذه شاشة تجريبية للـPrototype وليست نظام دخول حقيقيًا بعد.</p>
+  </div>
+</div>
+
 <header>
 <div class="brand"><div class="brandmark">GAHAR</div><div><h1>نظام إدارة الزيارات</h1><p>إدارة ومتابعة تنفيذ الزيارات</p></div></div>
-<div class="user">مدير عام الإدارة ▾</div>
+<div id="currentUser" class="user">مدير عام الإدارة ▾</div>
 </header>
 <div class="layout">
 <aside><nav>
-<button class="active" data-view="dashboard">الرئيسية</button>
-<button data-view="visits">الزيارات</button>
-<button data-view="branches">الفروع والمحافظات</button>
-<button data-view="teams">فرق الزيارات</button>
-<button data-view="exceptions">الاستثناءات</button><button data-view="assign">تكليف زيارة</button>
+<button class="active" data-view="dashboard" data-roles="gm,manager,branch,leader,member">الرئيسية</button>
+<button data-view="visits" data-roles="gm,manager,branch,leader,member">الزيارات</button>
+<button data-view="branches" data-roles="gm">الفروع والمحافظات</button>
+<button data-view="teams" data-roles="gm,manager,branch,leader">فرق الزيارات</button>
+<button data-view="exceptions" data-roles="gm,manager,branch,leader">الاستثناءات</button><button data-view="assign" data-roles="gm,manager">تكليف زيارة</button>
 </nav></aside>
 <main>
 <section id="dashboard" class="view active">
@@ -153,6 +179,22 @@ nav button{font-size:11px;padding:9px 3px}
 </section>
 </main></div>
 <script>
+const roleNames={gm:'مدير عام الإدارة',manager:'مدير الإدارة',branch:'مدير فرع المنيا',leader:'رئيس فريق — المقر الرئيسي',member:'عضو فريق — المقر الرئيسي'};
+function loginDemo(){
+ const role=document.getElementById('demoUser').value;
+ document.getElementById('currentUser').textContent=roleNames[role]+' ▾';
+ document.getElementById('loginScreen').style.display='none';
+ document.querySelectorAll('nav button').forEach(b=>{
+   const allowed=(b.dataset.roles||'').split(',').includes(role);
+   b.style.display=allowed?'block':'none';
+ });
+ // open dashboard
+ document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+ document.getElementById('dashboard').classList.add('active');
+ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+ const home=document.querySelector('nav button[data-view="dashboard"]'); if(home) home.classList.add('active');
+}
+
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.view).classList.add('active')});
 
 function checkAvailability(){
